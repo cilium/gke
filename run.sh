@@ -20,9 +20,10 @@ kubectl create clusterrolebinding cluster-admin-binding --clusterrole cluster-ad
 ./tls/certs/gen-cert.sh cluster.local
 ./tls/deploy-certs.sh
 
-kubectl create -f 00-crd-etcd.yaml
+kubectl create -f etcd/00-crd-etcd.yaml
 
-until kubectl apply -f cilium-etcd-cluster.yaml; do sleep 1; done
+until kubectl apply -f etcd/cilium-etcd-cluster.yaml; do sleep 1; done
 
-kubectl apply -f .
+kubectl apply -f etcd
+kubectl apply -f cilium-deployment.yaml
 kubectl -n kube-system delete pod -l k8s-app=kube-dns
