@@ -13,11 +13,12 @@ Make sure that `gcloud` and `go` are installed and your $PATH points to $GOPATH/
 
 This script will:
 1. install `cfssl` and `cfssjson` utilities to your GOPATH
-2. create standard container in GKE. Script is configured by env variables:
+2. create standard cluster in GKE. Script is configured by env variables:
   - `CLUSTER_NAME`
   - `GKE_PROJECT`
   - `GKE_REGION`
   - `GKE_ZONE`
+  - `GKE_VERSION`
   - `ADMIN_USER`
 3. create `cilium` namespace
 4. create cluster role binding for user `$ADMIN_USER` (your email address that you registered in GCP with)
