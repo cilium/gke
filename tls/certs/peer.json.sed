@@ -1,8 +1,8 @@
 {
     "CN": "etcd peer",
     "hosts": [
-        "*.cilium-etcd.cilium.svc",
-        "*.cilium-etcd.cilium.svc.CLUSTER_DOMAIN"
+        "*.cilium-etcd.kube-system.svc",
+        "*.cilium-etcd.kube-system.svc.CLUSTER_DOMAIN"
     ],
     "key": {
         "algo": "rsa",

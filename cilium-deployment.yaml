@@ -10,7 +10,7 @@ data:
   etcd-config: |-
     ---
     endpoints:
-      - https://cilium-etcd-client.cilium.svc:2379
+      - https://cilium-etcd-client.kube-system.svc:2379
     #
     # In case you want to use TLS in etcd, uncomment the 'ca-file' line
     # and create a kubernetes secret by following the tutorial in

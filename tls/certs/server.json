@@ -1,8 +1,8 @@
 {
     "CN": "etcd server",
     "hosts": [
-        "*.cilium-etcd.cilium.svc",
-        "cilium-etcd-client.cilium.svc",
+        "*.cilium-etcd.kube-system.svc",
+        "cilium-etcd-client.kube-system.svc",
         "localhost"
     ],
     "key": {

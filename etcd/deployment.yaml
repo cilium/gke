@@ -2,7 +2,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: etcd-operator
-  namespace: cilium
+  namespace: kube-system
 spec:
   replicas: 1
   template:

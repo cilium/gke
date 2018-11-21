@@ -2,7 +2,7 @@ apiVersion: "etcd.database.coreos.com/v1beta2"
 kind: "EtcdCluster"
 metadata:
   name: "cilium-etcd"
-  namespace: cilium
+  namespace: kube-system
 spec:
   size: 3
   version: "3.3.9"
