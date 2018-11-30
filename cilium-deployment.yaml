@@ -10,7 +10,7 @@ data:
   etcd-config: |-
     ---
     endpoints:
-      - https://cilium-etcd-client.kube-system.svc:2379
+      - https://cilium-etcd-client.cilium.svc:2379
     #
     # In case you want to use TLS in etcd, uncomment the 'ca-file' line
     # and create a kubernetes secret by following the tutorial in
@@ -141,6 +141,7 @@ spec:
               name: cilium-config
               optional: true
               key: clean-cilium-bpf-state
+      dnsPolicy: ClusterFirstWithHostNet
       containers:
       - image: docker.io/cilium/cilium:latest
         imagePullPolicy: IfNotPresent
@@ -170,6 +171,10 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
+        - name: "CILIUM_K8S_NAMESPACE"
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
         - name: "CILIUM_DEBUG"
           valueFrom:
             configMapKeyRef:

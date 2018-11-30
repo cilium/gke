@@ -1,53 +1,91 @@
 # Deploying Cilium on GKE
 
-This directory contains the necessary scripts to deploy GKE cluster with Cilium backed by etcd operator
+This is a guide on how to set up Cilium on [Google GKE](https://cloud.google.com/kubernetes-engine/).
 
-Due to compatibility problems with Daemonsets running in kube-system namespace in GKE clusters, Cilium is deployed in `cilium` namespace.
+## GKE Requirements
 
-Make sure to set your node pools to use kernel new enough to run Cilium.
+1. Install the Google Cloud SDK (`gcloud`)
 
-##Creating 3 node cluster
+   ```
+   curl https://sdk.cloud.google.com | bash
+   ```
 
-To create 3 node cluster with Cilium, run `run-gke-w-cilium.sh` script from this repository.
-Make sure that `gcloud` and `go` are installed and your $PATH points to $GOPATH/bin directory.
+   For more information, see [Installing Google Cloud SDK](https://cloud.google.com/sdk/install)
 
-Running this script will cause your account to be billed according to GKE standard billing.
+2. Make sure you are authenticated to use the Google Cloud API:
 
-This script will:
-. retrieve default newest 1.11 kubernetes version available in GKE region you specified
-1. install `cfssl` and `cfssjson` utilities to your GOPATH
-2. create standard cluster in GKE. Script is configured by env variables:
-  - `CLUSTER_NAME` (required)
-  - `GKE_PROJECT` (required)
-  - `GKE_REGION` (defaults to `europe-north1`)
-  - `GKE_ZONE` (defaults to `-a`)
-  - `GKE_VERSION` (defaults to newest 1.11 version available in zone fetched from gcloud)
-  - `ADMIN_USER` (required)
-3. configure kubectl to connect to this cluster
-4. wait for cluster to come up
-5. create `cilium` namespace
-6. create cluster role binding for user `$ADMIN_USER` (your email address that you registered in GCP with)
-7. generate etcd tls certificates and deploy them into k8s secrets
-8. create etcd clsuter Custom Resource Definition (for etcd operator)
-9. create cilium daemonset in Cilium namespace
-10. change kubelet config on all nodes to use cni
-11. restart kubelet on all nodes
-12. wait for etcd cluster CRD api endpoint to come up
-13. deploy etcd operator and cluster
-14. delete kube-dns pods so they are managed by Cilium
+   ```
+   export ADMIN_USER=user@email.com
+   glcoud auth login
+   ```
 
+   The `$ADMIN_USER` will be used to create a cluster role binding
 
-Now you can validate that Cilium is running properly in your cluster (requires Python>=2.7):
+3. Create a project
+
+   ```
+   export GKE_PROJECT=gke-clusters
+   gcloud projects create $GKE_PROJECT
+   ```
+
+4. Enable the GKE API for the project
+
+   ```
+   gcloud services enable --project $GKE_PROJECT container.googleapis.com
+   ```
+
+## Creating the cluster
+
+1. Specify optional cluster & zone parameters (optional):
+
+   ```
+   export GKE_REGION=europe-north1
+   export GKE_ZONE=-a
+   export GKE_VERSION=1.11
+   ```
+
+2. Create a GKE cluster and deploy Cilium
+
+   ```
+   CLUSTER_NAME=cluster1 ./create-gke-cluster.sh
+   ```
+
+## Verify Installation
+
 ```
-curl -sLO releases.cilium.io/tools/cluster-diagnosis.zip
-python cluster-diagnosis.zip --namespace cilium
+$  kubectl -n cilium get pods
+NAME                                    READY   STATUS    RESTARTS   AGE
+cilium-5jm4g                            1/1     Running   1          15m
+cilium-etcd-4rnwn47btn                  1/1     Running   0          13m
+cilium-etcd-bd4qh529rj                  1/1     Running   0          14m
+cilium-etcd-h79whhjzq8                  1/1     Running   0          14m
+cilium-etcd-operator-5f647dbbf8-8vfn9   1/1     Running   0          15m
+cilium-jlgs9                            1/1     Running   1          15m
+cilium-vf528                            1/1     Running   1          15m
+etcd-operator-759954d8db-w5ddm          1/1     Running   0          15m
 ```
 
-###Troubleshooting
-
-If Cilium and etcd pods don't come up it's most possibly a problem with etcd operator. Remove and reapply operator manifest to fix this, Cilium should come up when etcd cluster is up.
+## Deleting the cluster
 
 ```
-kubectl delete -f etcd/cilium-etcd-cluster.yaml
-kubectl apply -f etcd/cilium-etcd-cluster.yaml
+CLUSTER_NAME=cluster1 ./delete-gke-cluster.sh
 ```
+
+## Adding additional nodes
+
+When adding additional nodes, the following commands have to be executed to
+prepare the nodes and enable CNI in the kubelet configuration of the node:
+
+```
+FLAGS="--zone $GKE_REGION$GKE_ZONE --project $GKE_PROJECT"
+gcloud compute ssh $INSTANCE $FLAGS -- sudo sed -i "s:--network-plugin=kubenet:--network-plugin=cni\ --cni-bin-dir=/home/kubernetes/bin:g" /etc/default/kubelet
+gcloud compute ssh $INSTANCE $FLAGS -- sudo systemctl restart kubelet
+gcloud compute ssh $INSTANCE $FLAGS -- sudo mkdir -p /etc/cni/net.d/
+gcloud compute scp 04-cilium-cni.conf root@${INSTANCE}:/etc/cni/net.d/04-cilium-cni.conf $FLAGS
+```
+
+## Details
+
+* Cilium runs in the `cilium` namespace instead of the `kube-system` namespace.
+* cilium-etcd-operator maintains an etcd cluster for use by Cilium that allows
+  to scale down to 0 and scale back up.
