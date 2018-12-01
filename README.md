@@ -53,7 +53,7 @@ This is a guide on how to set up Cilium on [Google GKE](https://cloud.google.com
 ## Verify Installation
 
 ```
-$  kubectl -n cilium get pods
+kubectl -n cilium get pods
 NAME                                    READY   STATUS    RESTARTS   AGE
 cilium-5jm4g                            1/1     Running   1          15m
 cilium-etcd-4rnwn47btn                  1/1     Running   0          13m
