@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 if [ -z "$ADMIN_USER" ]; then
 	echo "ADMIN_USER is not set"
