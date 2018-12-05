@@ -16,7 +16,7 @@ This is a guide on how to set up Cilium on [Google GKE](https://cloud.google.com
 
    ```
    export ADMIN_USER=user@email.com
-   glcoud auth login
+   gcloud auth login
    ```
 
    The `$ADMIN_USER` will be used to create a cluster role binding
