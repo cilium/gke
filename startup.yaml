@@ -1,0 +1,31 @@
+kind: DaemonSet
+apiVersion: extensions/v1beta1
+metadata:
+  name: startup-script
+  namespace: cilium
+  labels:
+    app: startup-script
+spec:
+  template:
+    metadata:
+      labels:
+        app: startup-script
+    spec:
+      hostPID: true
+      hostIPC: true
+      hostNetwork: true
+      containers:
+        - name: startup-script
+          image: gcr.io/google-containers/startup-script:v1
+          securityContext:
+            privileged: true
+          env:
+          - name: STARTUP_SCRIPT
+            value: |
+              #! /bin/bash -ex
+              sudo sed -i "s:--network-plugin=kubenet:--network-plugin=cni\ --cni-bin-dir=/home/kubernetes/bin:g" /etc/default/kubelet
+              sudo mkdir -p /etc/cni/net.d/
+              printf '{\n    "name":"cilium",\n    "type":"cilium-cni"\n}' | sudo tee /etc/cni/net.d/04-cilium-cni.conf > /dev/null
+              sudo systemctl restart kubelet
+              sudo docker ps -a | grep "kube-dns" | awk '{print $1}' | xargs sudo docker kill  #force restart kube-dns containers
+              sudo docker ps -a | grep "POD" | grep -v "startup-script" | awk '{print $1}' |xargs sudo docker kill  #force restart kube-dns containers

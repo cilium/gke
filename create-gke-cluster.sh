@@ -21,25 +21,14 @@ gcloud container clusters get-credentials $CLUSTER_NAME --zone $GKE_REGION$GKE_Z
 echo "Waiting for Kubernetes cluster to become ready..."
 until kubectl get pods; do sleep 1; done
 
-echo "Enabling CNI configuration..."
-INSTANCES=$(gcloud compute instances --project $GKE_PROJECT list | grep $CLUSTER_NAME | awk '{print $1}')
-for INSTANCE in $INSTANCES; do
-	FLAGS="--zone $GKE_REGION$GKE_ZONE --project $GKE_PROJECT"
-	gcloud compute ssh $INSTANCE $FLAGS -- sudo sed -i "s:--network-plugin=kubenet:--network-plugin=cni\ --cni-bin-dir=/home/kubernetes/bin:g" /etc/default/kubelet
-	gcloud compute ssh $INSTANCE $FLAGS -- sudo systemctl restart kubelet
-	gcloud compute scp 04-cilium-cni.conf ${INSTANCE}:/tmp/04-cilium-cni.conf $FLAGS
-	gcloud compute ssh $INSTANCE $FLAGS -- sudo mkdir -p /etc/cni/net.d/
-	gcloud compute ssh $INSTANCE $FLAGS -- sudo cp /tmp/04-cilium-cni.conf /etc/cni/net.d/04-cilium-cni.conf
-done
-
 echo "Installing Cilium..."
 kubectl create ns cilium
+kubectl create -f startup.yaml
+until kubectl wait --for=condition=Ready --selector app=startup-script -n cilium pod; do sleep 1; done
+
 kubectl create clusterrolebinding cluster-admin-binding --clusterrole cluster-admin --user $ADMIN_USER
 kubectl create -f cilium-etcd-operator.yaml
 kubectl create -f cilium-deployment.yaml
-
-echo "Restarting kube-dns..."
-kubectl -n kube-system delete pod -l k8s-app=kube-dns
 
 echo "Waiting for cilium to become ready..."
 until kubectl wait --for=condition=Ready --selector k8s-app=cilium -n cilium pod; do sleep 1; done
