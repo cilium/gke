@@ -38,8 +38,20 @@ kubectl create clusterrolebinding cluster-admin-binding --clusterrole cluster-ad
 kubectl create -f cilium-etcd-operator.yaml
 kubectl create -f cilium-deployment.yaml
 
+echo "Restarting kube-dns-autoscaler..."
+kubectl -n kube-system delete pod -l k8s-app=kube-dns-autoscaler
+
 echo "Restarting kube-dns..."
 kubectl -n kube-system delete pod -l k8s-app=kube-dns
+
+echo "Restarting l7-default-backend..."
+kubectl -n kube-system delete pod -l k8s-app=glbc
+
+echo "Restarting heapster..."
+kubectl -n kube-system delete pod -l k8s-app=heapster
+
+echo "Restarting metrics-server..."
+kubectl -n kube-system delete pod -l k8s-app=metrics-server
 
 echo "Waiting for cilium to become ready..."
 until kubectl wait --for=condition=Ready --selector k8s-app=cilium -n cilium pod; do sleep 1; done
