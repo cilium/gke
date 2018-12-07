@@ -25,6 +25,10 @@ echo "Enabling CNI configuration..."
 INSTANCES=$(gcloud compute instances --project $GKE_PROJECT list | grep $CLUSTER_NAME | awk '{print $1}')
 for INSTANCE in $INSTANCES; do
 	FLAGS="--zone $GKE_REGION$GKE_ZONE --project $GKE_PROJECT"
+	gcloud compute scp sys-fs-bpf.mount ${INSTANCE}:/tmp/sys-fs-bpf.mount $FLAGS
+	gcloud compute ssh $INSTANCE $FLAGS -- sudo mv /tmp/sys-fs-bpf.mount /lib/systemd/system/
+	gcloud compute ssh $INSTANCE $FLAGS -- sudo systemctl enable sys-fs-bpf.mount
+	gcloud compute ssh $INSTANCE $FLAGS -- sudo systemctl start sys-fs-bpf.mount
 	gcloud compute ssh $INSTANCE $FLAGS -- sudo sed -i "s:--network-plugin=kubenet:--network-plugin=cni\ --cni-bin-dir=/home/kubernetes/bin:g" /etc/default/kubelet
 	gcloud compute ssh $INSTANCE $FLAGS -- sudo systemctl restart kubelet
 	gcloud compute scp 04-cilium-cni.conf ${INSTANCE}:/tmp/04-cilium-cni.conf $FLAGS
