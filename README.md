@@ -43,6 +43,7 @@ This is a guide on how to set up Cilium on [Google GKE](https://cloud.google.com
    export GKE_ZONE=-a
    export GKE_VERSION=1.11
    export IMAGE_TYPE=UBUNTU #(COS is default)
+   export NUM_NODES=5 #(default: 3)
    ```
 
 2. Create a GKE cluster and deploy Cilium
