@@ -26,7 +26,7 @@ INSTANCES=$(gcloud compute instances --project $GKE_PROJECT list | grep $CLUSTER
 for INSTANCE in $INSTANCES; do
 	FLAGS="--zone $GKE_REGION$GKE_ZONE --project $GKE_PROJECT"
 	gcloud compute scp sys-fs-bpf.mount ${INSTANCE}:/tmp/sys-fs-bpf.mount $FLAGS
-	gcloud compute ssh $INSTANCE $FLAGS -- sudo mv /tmp/sys-fs-bpf.mount /lib/systemd/system/
+	gcloud compute ssh $INSTANCE $FLAGS -- sudo mv /tmp/sys-fs-bpf.mount /etc/systemd/system/
 	gcloud compute ssh $INSTANCE $FLAGS -- sudo systemctl enable sys-fs-bpf.mount
 	gcloud compute ssh $INSTANCE $FLAGS -- sudo systemctl start sys-fs-bpf.mount
 	gcloud compute ssh $INSTANCE $FLAGS -- sudo sed -i "s:--network-plugin=kubenet:--network-plugin=cni\ --cni-bin-dir=/home/kubernetes/bin:g" /etc/default/kubelet
@@ -58,4 +58,4 @@ echo "Restarting metrics-server..."
 kubectl -n kube-system delete pod -l k8s-app=metrics-server
 
 echo "Waiting for cilium to become ready..."
-until kubectl wait --for=condition=Ready --selector k8s-app=cilium -n cilium pod; do sleep 1; done
+until kubectl wait --for=condition=Ready --selector k8s-app=cilium -n kube-system pod; do sleep 1; done

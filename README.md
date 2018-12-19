@@ -87,6 +87,5 @@ gcloud compute scp 04-cilium-cni.conf root@${INSTANCE}:/etc/cni/net.d/04-cilium-
 
 ## Details
 
-* Cilium runs in the `cilium` namespace instead of the `kube-system` namespace.
 * cilium-etcd-operator maintains an etcd cluster for use by Cilium that allows
   to scale down to 0 and scale back up.
