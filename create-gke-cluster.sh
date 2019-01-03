@@ -15,6 +15,11 @@ NUM_NODES="${NUM_NODES:-3}"
 default_version=$(gcloud container get-server-config --project $GKE_PROJECT --zone europe-north1-a | grep 1.11 | head -n 1 | awk '{print $2}')
 GKE_VERSION=${GKE_VERSION:-$default_version}
 
+case "$IMAGE_TYPE" in
+	"COS") bpf_mount=/etc/systemd/system/ ;;
+	"UBUNTU") bpf_mount=/lib/systemd/system/ ;;
+esac
+
 gcloud beta container --project $GKE_PROJECT clusters create $CLUSTER_NAME --zone $GKE_REGION$GKE_ZONE --username "admin" --cluster-version $GKE_VERSION --machine-type "n1-standard-1" --image-type $IMAGE_TYPE --disk-type "pd-standard" --disk-size "100" --scopes "https://www.googleapis.com/auth/devstorage.read_only","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" --num-nodes $NUM_NODES --no-enable-cloud-logging --no-enable-cloud-monitoring --network "projects/$GKE_PROJECT/global/networks/default" --subnetwork "projects/$GKE_PROJECT/regions/$GKE_REGION/subnetworks/default" --addons HorizontalPodAutoscaling,HttpLoadBalancing --no-enable-autoupgrade --no-enable-autorepair
 
 gcloud container clusters get-credentials $CLUSTER_NAME --zone $GKE_REGION$GKE_ZONE --project $GKE_PROJECT
@@ -27,7 +32,7 @@ INSTANCES=$(gcloud compute instances --project $GKE_PROJECT list | grep $CLUSTER
 for INSTANCE in $INSTANCES; do
 	FLAGS="--zone $GKE_REGION$GKE_ZONE --project $GKE_PROJECT"
 	gcloud compute scp sys-fs-bpf.mount ${INSTANCE}:/tmp/sys-fs-bpf.mount $FLAGS
-	gcloud compute ssh $INSTANCE $FLAGS -- sudo mv /tmp/sys-fs-bpf.mount /lib/systemd/system/
+	gcloud compute ssh $INSTANCE $FLAGS -- sudo mv /tmp/sys-fs-bpf.mount $bpf_mount
 	gcloud compute ssh $INSTANCE $FLAGS -- sudo systemctl enable sys-fs-bpf.mount
 	gcloud compute ssh $INSTANCE $FLAGS -- sudo systemctl start sys-fs-bpf.mount
 	gcloud compute ssh $INSTANCE $FLAGS -- sudo sed -i "s:--network-plugin=kubenet:--network-plugin=cni\ --cni-bin-dir=/home/kubernetes/bin:g" /etc/default/kubelet
