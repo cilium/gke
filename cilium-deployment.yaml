@@ -368,7 +368,6 @@ spec:
           name: bpf-maps
         - mountPath: /var/run/cilium
           name: cilium-run
-      priorityClassName: system-node-critical
       restartPolicy: Always
       serviceAccount: cilium
       serviceAccountName: cilium
@@ -393,7 +392,7 @@ spec:
         name: docker-socket
         # To install cilium cni plugin in the host
       - hostPath:
-          path: /opt/cni/bin
+          path: /home/kubernetes/bin
           type: DirectoryOrCreate
         name: cni-path
         # To install cilium cni configuration in the host
@@ -517,7 +516,6 @@ spec:
           name: etcd-secrets
           readOnly: true
       dnsPolicy: ClusterFirst
-      priorityClassName: system-node-critical
       restartPolicy: Always
       serviceAccount: cilium-operator
       serviceAccountName: cilium-operator
@@ -536,10 +534,9 @@ spec:
           defaultMode: 420
           optional: true
           secretName: cilium-etcd-secrets
-
 ---
-kind: ServiceAccount
 apiVersion: v1
+kind: ServiceAccount
 metadata:
   name: cilium-operator
   namespace: cilium
@@ -548,7 +545,6 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
   name: cilium-operator
-  namespace: cilium
 rules:
 - apiGroups:
   - ""
@@ -595,7 +591,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: cilium-etcd-operator
-  namespace: cilium
 rules:
 - apiGroups:
   - etcd.database.coreos.com
@@ -665,7 +660,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: cilium-etcd-operator
-  namespace: cilium
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -679,7 +673,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: etcd-operator
-  namespace: cilium
 rules:
 - apiGroups:
   - etcd.database.coreos.com
@@ -733,7 +726,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: etcd-operator
-  namespace: cilium
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -743,8 +735,8 @@ subjects:
   name: cilium-etcd-sa
   namespace: cilium
 ---
-kind: ServiceAccount
 apiVersion: v1
+kind: ServiceAccount
 metadata:
   name: cilium-etcd-operator
   namespace: cilium
@@ -808,7 +800,6 @@ spec:
         name: cilium-etcd-operator
       dnsPolicy: ClusterFirst
       hostNetwork: true
-      priorityClassName: system-node-critical
       restartPolicy: Always
       serviceAccount: cilium-etcd-operator
       serviceAccountName: cilium-etcd-operator
