@@ -45,7 +45,6 @@ done
 echo "Installing Cilium..."
 kubectl create ns cilium
 kubectl create clusterrolebinding cluster-admin-binding --clusterrole cluster-admin --user $ADMIN_USER
-kubectl create -f cilium-etcd-operator.yaml
 kubectl create -f cilium-deployment.yaml
 
 echo "Restarting kube-dns-autoscaler..."
