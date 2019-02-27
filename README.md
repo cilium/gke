@@ -1,3 +1,8 @@
+# !!! WARNING !!!
+
+**This repository is use for development porpuses. The official guide to run cilium on GKE
+can be found [here](https://docs.cilium.io/en/stable/gettingstarted/k8s-install-gke/)**
+
 # Deploying Cilium on GKE
 
 This is a guide on how to set up Cilium on [Google GKE](https://cloud.google.com/kubernetes-engine/).
