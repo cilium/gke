@@ -8,11 +8,11 @@ fi
 CLUSTER_NAME="${CLUSTER_NAME:-default-cluster}"
 GKE_PROJECT="${GKE_PROJECT:-default-project}"
 GKE_REGION="${GKE_REGION:-europe-north1}"
-GKE_ZONE="${GKE_ZONE:--a}"
+GKE_ZONE="${GKE_ZONE:-a}"
 IMAGE_TYPE="${IMAGE_TYPE:-COS}"
 NUM_NODES="${NUM_NODES:-3}"
 
-default_version=$(gcloud container get-server-config --project $GKE_PROJECT --zone europe-north1-a | grep 1.11 | head -n 1 | awk '{print $2}')
+default_version=$(gcloud container get-server-config --project $GKE_PROJECT --zone ${GKE_REGION}${GKE_ZONE} | grep 1.11 | head -n 1 | awk '{print $2}')
 GKE_VERSION=${GKE_VERSION:-$default_version}
 
 case "$IMAGE_TYPE" in
